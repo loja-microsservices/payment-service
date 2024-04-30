@@ -1,0 +1,61 @@
+server:
+  port: 9004
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 2s
+    keep-alive-timeout: 15s
+    threads:
+      max: 10
+      min: 5
+
+spring:
+  application:
+    name: payment-service
+  main:
+    banner-mode: off
+  lifecycle:
+    timeout-per-shutdown-phase: 15s
+  r2dbc:
+    username: user
+    password: user123
+    url: r2dbc:postgresql://localhost:5432/lojadb_payment
+    pool:
+      max-create-connection-time: 2s
+      initial-size: 5
+      max-size: 10
+  flyway:
+    user: ${spring.r2dbc.username}
+    password: ${spring.r2dbc.password}
+    url: jdbc:postgresql://localhost:5432/lojadb_payment
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      uri: http://localhost:8888
+      request-connect-timeout: 5000 # 5s
+      request-read-timeout: 5000 # 5s
+      fail-fast: false # In production, set to true
+      retry:
+        max-attempts: 6
+        initial-interval: 1000 # 1s
+        max-interval: 2000 # 2s
+        multiplier: 1
+    function:
+      definition: dispatcherPedidoService
+    stream:
+      bindings:
+        dispatcherPedidoService-in-0:
+          destination: sendPaymentService
+          group: ${spring.application.name}
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: password
+    connection-timeout: 5s
+
+
+loja:
+  payment:
+    greeting: Bem-vindo a tela de pagamentos
